@@ -10,8 +10,7 @@ function Login() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  // Access the isLoggedIn state and setIsLoggedIn function from the AuthContext
-  const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext)
+  const { setIsLoggedIn } = useContext(AuthContext)
 
   const handleLogin = () => {
     // Make an API request to perform login

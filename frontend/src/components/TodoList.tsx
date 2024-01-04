@@ -1,7 +1,15 @@
-import React, { useEffect, useState } from 'react'
-import {addTodos, editTodo, getTodos, removeTodos, TodoItem} from '../api/todo'
+import React, { Fragment, useEffect, useMemo, useState } from 'react'
 import {
-  Box, Button, Checkbox,
+  addTodos,
+  editTodo,
+  getTodos,
+  removeTodos,
+  TodoItem,
+} from '../api/todo'
+import {
+  Box,
+  Button,
+  Checkbox,
   Dialog,
   DialogContent,
   IconButton,
@@ -14,10 +22,16 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import {AddCircle, CalendarToday, Delete, Edit, Save} from '@mui/icons-material'
+import {
+  AddCircle,
+  CalendarToday,
+  Delete,
+  Edit,
+  Save,
+} from '@mui/icons-material'
 import { StaticDatePicker } from '@mui/x-date-pickers'
 import dayjs from 'dayjs'
-import TodoListFilter, {FilterKeys} from "./TodoListFilter";
+import TodoListFilter, { FilterKeys } from './TodoListFilter'
 
 const blankTodo: TodoItem = {
   id: null,
@@ -33,23 +47,26 @@ function TodoList() {
   const [todoItems, setTodoItems] = useState<TodoItem[]>([blankTodo])
   const [filter, setFilter] = useState<FilterKeys>('all')
 
+  const anyActiveTodo = useMemo(
+    () => todoItems.some((e) => e.isEdit),
+    [todoItems]
+  )
+
   const closeDialog = () => {
     setEditIndex(null)
     setDateDialogOpen(false)
   }
 
   useEffect(() => {
-    fetchTasks()
+    loadTodos()
   }, [])
 
   const addBlankTodo = () => {
     const todos = [...todoItems]
-    todos.map((e) => {
-      e.isEdit = false
-      return e
-    })
-    todos.push({...blankTodo})
-    setTodoItems(todos)
+    if (!anyActiveTodo) {
+      todos.push({ ...blankTodo })
+      setTodoItems(todos)
+    }
   }
 
   const editTodoFields = (
@@ -64,10 +81,10 @@ function TodoList() {
       todoItem[field] = value
     }
     newTodos[index] = todoItem
-    setTodoItems(newTodos)
+    setTodoItems([...newTodos])
   }
 
-  const fetchTasks = () => {
+  const loadTodos = () => {
     getTodos()
       .then((response) => {
         if (response.data) setTodoItems(response.data)
@@ -78,36 +95,50 @@ function TodoList() {
   }
 
   const handleAddUpdateTask = (index: number, todo: TodoItem) => {
-      if(todo.id == null){
-        addTodos(todo)
-            .then(({data})=>{
-              if(data.id){
-                editTodoFields(index, 'id', data.id)
-              }
-            })
-            .catch((error) => {
+    if (todo.id == null) {
+      addTodos(todo)
+        .then(({ data }) => {
+          if (data.id) {
+            editTodoFields(index, 'id', data.id)
+          }
+        })
+        .catch((error) => {
           console.error(error)
         })
-      }else{
-        editTodo(todo.id, todo)
-            .catch(error=>{
-              console.error(error)
-            })
-      }
-      editTodoFields(index, 'isEdit', false)
+    } else {
+      editTodo(todo.id, todo).catch((error) => {
+        console.error(error)
+      })
+    }
+    editTodoFields(index, 'isEdit', false)
   }
 
-  const deleteTodo = (todoId: number)=>{
+  const deleteTodo = (todoId: number) => {
     removeTodos(todoId)
-        .then(() => {
-          setTodoItems((prevTodos) => {
-            return prevTodos.filter((e) => e.id !== todoId)
-          })
+      .then(() => {
+        setTodoItems((prevTodos) => {
+          return prevTodos.filter((e) => e.id !== todoId)
         })
-        .catch((e) => {
-          console.error(e)
-        })
+      })
+      .catch((e) => {
+        console.error(e)
+      })
   }
+
+  const filteredTodos = useMemo(
+    () =>
+      todoItems.map((value) => {
+        if (filter === 'completed') {
+          value.show = value.completed
+        } else if (filter === 'pending') {
+          value.show = !value.completed
+        } else {
+          value.show = true
+        }
+        return value
+      }),
+    [todoItems, filter]
+  )
 
   return (
     <>
@@ -123,101 +154,142 @@ function TodoList() {
             >
               <Box display={'flex'} justifyContent={'space-between'}>
                 <Typography
-                    color={'primary'}
-                    variant={'h4'}
-                    fontWeight={700}
-                    mb={4}
-                    component={'h2'}
+                  color={'primary'}
+                  variant={'h4'}
+                  fontWeight={700}
+                  mb={4}
+                  component={'h2'}
                 >
                   To Do List
                 </Typography>
-                <TodoListFilter filter={filter} setFilter={setFilter} todos={todoItems}/>
+                <TodoListFilter
+                  filter={filter}
+                  setFilter={setFilter}
+                  todos={todoItems}
+                />
               </Box>
 
-              {todoItems.filter(value=>{
-                if(filter === 'completed'){
-                  return value.completed
-                } else if(filter === 'pending') {
-                  return !value.completed
-                }else {
-                  return true
+              {filteredTodos.map((value, index) => {
+                if (!value.show) {
+                  return <Fragment key={value.id} />
                 }
-              }).map((value, index) => {
                 return (
                   <List key={value.id} dense>
-                    <ListItem secondaryAction={!value.isEdit && <>
-                      <IconButton color={'warning'} onClick={()=>{
-                          editTodoFields(index, 'isEdit', true)
-                      }}><Edit/>
-                      </IconButton>
-                      <IconButton color={'error'} onClick={()=>{
-                        value.id && deleteTodo(value.id)
-                      }}>
-                        <Delete/>
-                      </IconButton>
-                    </>}>
+                    <ListItem
+                      secondaryAction={
+                        !value.isEdit && (
+                          <>
+                            <IconButton
+                              color={'warning'}
+                              title={'Edit'}
+                              onClick={() => {
+                                editTodoFields(index, 'isEdit', true)
+                              }}
+                            >
+                              <Edit />
+                            </IconButton>
+                            <IconButton
+                              color={'error'}
+                              title={'Delete'}
+                              onClick={() => {
+                                value.id && deleteTodo(value.id)
+                              }}
+                            >
+                              <Delete />
+                            </IconButton>
+                          </>
+                        )
+                      }
+                    >
                       <ListItemIcon>
                         <Checkbox
                           edge="start"
+                          key={Math.random()}
                           checked={value.completed}
-                          onChange={() => {
-                            const checked = !value.completed
+                          onChange={(event) => {
+                            const checked = event.target.checked
                             editTodoFields(index, 'completed', checked)
-                            handleAddUpdateTask(index, {...value, completed: checked})
+                            handleAddUpdateTask(index, {
+                              ...value,
+                              completed: checked,
+                            })
                           }}
                           tabIndex={-1}
+                          disabled={value.id == null}
+                          title={
+                            value.id == null
+                              ? 'Please save the To Do item before marking it complete'
+                              : undefined
+                          }
                           disableRipple
                         />
                       </ListItemIcon>
                       {value.isEdit ? (
-                          <Box display={'flex'} width={'100%'} alignItems={'start'}>
                         <Box
                           display={'flex'}
-                          flexDirection={'column'}
                           width={'100%'}
+                          alignItems={'start'}
                         >
-                          <TextField
-                            InputProps={{
-                              sx: {
-                                fontSize: '24px',
-                              },
-                              endAdornment: (
-                                <InputAdornment position={'end'}>
-                                  <IconButton
+                          <Box
+                            display={'flex'}
+                            flexDirection={'column'}
+                            width={'100%'}
+                          >
+                            <TextField
+                              InputProps={{
+                                sx: {
+                                  fontSize: '24px',
+                                },
+                                endAdornment: (
+                                  <InputAdornment position={'end'}>
+                                    <IconButton
                                       color={'info'}
-                                    onClick={() => {
-                                      setDateDialogOpen(true)
-                                      setEditIndex(index)
-                                    }}
-                                  >
-                                    <CalendarToday fontSize={'small'} />
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                            autoFocus={value.isEdit}
-                            variant={'standard'}
-                            value={value.title}
-                            placeholder={'Todo'}
-                            onChange={(e) => {
-                              editTodoFields(index, 'title', e.target.value)
-                            }}
-                          />
-                          <TextField
-                            variant={'standard'}
-                            value={value.description}
-                            placeholder={'Description'}
-                            onChange={(e) => {
-                              editTodoFields(index, 'description', e.target.value)
-                            }}
-                          />
-                        </Box>
-                            <Box mt={0.25}>
-                              <IconButton color={'success'} onClick={()=>handleAddUpdateTask(index, value)}>
-                                <Save/>
-                              </IconButton>
-                            </Box>
+                                      onClick={() => {
+                                        setDateDialogOpen(true)
+                                        setEditIndex(index)
+                                      }}
+                                    >
+                                      <CalendarToday fontSize={'small'} />
+                                    </IconButton>
+                                  </InputAdornment>
+                                ),
+                              }}
+                              autoFocus={value.isEdit}
+                              variant={'standard'}
+                              value={value.title}
+                              placeholder={'Todo'}
+                              onChange={(e) => {
+                                editTodoFields(index, 'title', e.target.value)
+                              }}
+                            />
+                            <TextField
+                              variant={'standard'}
+                              value={value.description}
+                              placeholder={'Description'}
+                              onChange={(e) => {
+                                editTodoFields(
+                                  index,
+                                  'description',
+                                  e.target.value
+                                )
+                              }}
+                            />
                           </Box>
+                          <Box mt={0.25}>
+                            <IconButton
+                              disabled={value.title.trim().length < 1}
+                              color={'success'}
+                              onClick={() => handleAddUpdateTask(index, value)}
+                              title={
+                                value.title.trim().length < 1
+                                  ? 'Please enter a valid todo item'
+                                  : undefined
+                              }
+                            >
+                              <Save />
+                            </IconButton>
+                          </Box>
+                        </Box>
                       ) : (
                         <ListItemText
                           primaryTypographyProps={{
@@ -244,18 +316,21 @@ function TodoList() {
                 sx={{
                   display: 'flex',
                   justifyContent: 'center',
-                  mt: 4 ,
+                  mt: 4,
                 }}
               >
                 <Button
                   color={'success'}
                   size={'large'}
                   sx={{
-                    borderRadius: '50px'
+                    borderRadius: '50px',
                   }}
                   onClick={addBlankTodo}
-                  startIcon={<AddCircle
-                  />}
+                  disabled={anyActiveTodo}
+                  startIcon={<AddCircle />}
+                  title={
+                    anyActiveTodo ? 'Please save any existing todo' : undefined
+                  }
                 >
                   Add Task
                 </Button>

@@ -10,6 +10,7 @@ export interface TodoItem {
   completed: boolean
   isEdit?: boolean
   timestamp?: number
+  show?: boolean
 }
 
 export const getTodos = () => taskClient.get('')
