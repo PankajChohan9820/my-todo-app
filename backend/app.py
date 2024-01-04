@@ -17,9 +17,9 @@ app.register_blueprint(users_api)
 
 
 # Hello world to test
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
+# @app.route('/')
+# def hello_world():
+#     return 'Hello, World!'
 
 @app.route('/')
 def serve():
