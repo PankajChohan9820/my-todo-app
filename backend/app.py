@@ -6,7 +6,7 @@ from backend.routes.todo_route import tasks_api
 from backend.routes.todo_users import users_api
 
 
-app = Flask(__name__, static_folder = 'my-todo-app/frontend/build')
+app = Flask(__name__, static_folder = 'frontend/build')
 CORS(app = app)
 app.config.from_object('backend.config.Config')
 db.init_app(app)
@@ -22,6 +22,7 @@ app.register_blueprint(users_api)
 #     return 'Hello, World!'
 
 @app.route('/')
+@cross_origin()
 def serve():
     return send_from_directory(app.static_folder, 'index.html')
 
