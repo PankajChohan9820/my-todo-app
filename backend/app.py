@@ -8,7 +8,7 @@ from backend.routes.todo_users import users_api
 
 app = Flask(__name__, static_folder = 'my-todo-app/frontend/build')
 CORS(app = app)
-app.config.from_object('config.Config')
+app.config.from_object('backend.config.Config')
 db.init_app(app)
 
 
