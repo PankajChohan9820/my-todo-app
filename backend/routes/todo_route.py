@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models.task_model import db, Task
+from backend.models.task_model import db, Task
 tasks_api = Blueprint('tasks_api', __name__)
 
 @tasks_api.route('/tasks', methods=['GET'])

@@ -1,9 +1,9 @@
 from flask import Flask
 from flask.helpers import send_from_directory
 from flask_cors import CORS, cross_origin
-from models.task_model import db
-from routes.todo_route import tasks_api
-from routes.todo_users import users_api
+from backend.models.task_model import db
+from backend.routes.todo_route import tasks_api
+from backend.routes.todo_users import users_api
 
 
 app = Flask(__name__, static_folder = 'my-todo-app/frontend/build')
