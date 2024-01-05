@@ -1,14 +1,15 @@
 from flask import Flask
 from flask.helpers import send_from_directory
 from flask_cors import CORS, cross_origin
-from backend.models.task_model import db
-from backend.routes.todo_route import tasks_api
-from backend.routes.todo_users import users_api
+from models.task_model import db
+from routes.todo_route import tasks_api
+from routes.todo_users import users_api
+from dotenv import load_dotenv
 
-
-app = Flask(__name__, static_folder = '../frontend/build', static_url_path = '/')
+load_dotenv()
+app = Flask(__name__, static_folder = 'frontend/build', static_url_path = '/')
 CORS(app = app)
-app.config.from_object('backend.config.Config')
+app.config.from_object('config.Config')
 db.init_app(app)
 
 
