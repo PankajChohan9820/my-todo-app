@@ -4,7 +4,7 @@ A full-stack Todo web application built with ReactJS and Flask.
 
 ## Introduction
 
-This project is a full-stack Todo application implemented with ReactJS for the frontend and Flask for the backend. It allows users to manage their tasks efficiently with features such as viewing, creating, editing, and deleting Todo items.
+This project is a full-stack Todo application implemented with ReactJS for the front end and Flask for the backend. It allows users to manage their tasks efficiently with features such as viewing, creating, editing, and deleting Todo items.
 
 ## Folder Structure
 
@@ -37,15 +37,11 @@ For more details on the folder structure, please refer to the [Folder Structure]
     npm install
 
 4. Install backend dependencies:
-    cd ../backend
     pip install -r requirements.txt
 
-5. Run the frontend:
-    cd ../frontend
-    npm start
-
-6. Run the backend:
-    cd ../backend
+5. Run the code:
     python app.py
+
+6. If you do come changes in frontend. MAke sure you do npm build to run the app in our flask server.
 
 
